@@ -29,6 +29,11 @@ export default defineConfig({
             target: "http://127.0.0.1:4747",
             changeOrigin: true,
           },
+          // Catalog only (`/skills/index.json`, `/skills/<id>/<id>.md`) — not the SPA.
+          "/skills/": {
+            target: "http://127.0.0.1:4747",
+            changeOrigin: true,
+          },
         },
   },
   build: {

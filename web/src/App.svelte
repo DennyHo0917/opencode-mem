@@ -13,6 +13,8 @@
   import EditMemoryDialog from "$lib/components/explorer/EditMemoryDialog.svelte";
   import MemoryList from "$lib/components/explorer/MemoryList.svelte";
   import ProfileView from "$lib/components/explorer/ProfileView.svelte";
+  import SkillDialog from "$lib/components/explorer/SkillDialog.svelte";
+  import SkillsView from "$lib/components/explorer/SkillsView.svelte";
   import TagMigrationDialog from "$lib/components/explorer/TagMigrationDialog.svelte";
   import TagFilter from "$lib/components/explorer/TagFilter.svelte";
   import Alert from "$lib/components/ui/alert.svelte";
@@ -28,6 +30,7 @@
   import { initRouter, navigate, ROUTES, shouldHandleSpaClick } from "$lib/router";
   import { createRouter } from "$lib/router.svelte";
   import { createMemoriesExplorer } from "$lib/stores/memories-explorer.svelte";
+  import { createSkillsStore } from "$lib/stores/skills.svelte";
   import { createUserProfile } from "$lib/stores/user-profile.svelte";
   import {
     GAP,
@@ -56,6 +59,7 @@
   const router = createRouter();
   const explorer = createMemoriesExplorer();
   const profile = createUserProfile();
+  const skills = createSkillsStore();
 
   let sidebarOpen = $state(false);
   let sidebarCollapsed = $state(readCollapsed());
@@ -63,7 +67,11 @@
   let headerScrolled = $state(false);
 
   const pageTitle = $derived(
-    router.view === "project" ? i18n.t("tab-project") : i18n.t("tab-profile")
+    router.view === "project"
+      ? i18n.t("tab-project")
+      : router.view === "skills"
+        ? i18n.t("tab-skills")
+        : i18n.t("tab-profile")
   );
 
   $effect(() => {
@@ -108,6 +116,9 @@
     if (router.view === "profile") {
       void profile.loadUserProfile();
     }
+    if (router.view === "skills") {
+      void skills.loadSkills();
+    }
   });
 
   function onLangToggle() {
@@ -115,6 +126,7 @@
     void explorer.loadMemories();
     void explorer.loadStats();
     if (router.view === "profile") void profile.loadUserProfile();
+    if (router.view === "skills") void skills.loadSkills();
   }
 
   function onHomeClick(event: MouseEvent) {
@@ -136,6 +148,7 @@
     brand={i18n.t("brand")}
     projectLabel={i18n.t("tab-project")}
     profileLabel={i18n.t("tab-profile")}
+    skillsLabel={i18n.t("tab-skills")}
     {langLabel}
     languageLabel={i18n.t("nav-language")}
     themeLabel={i18n.t("nav-theme")}
@@ -154,9 +167,9 @@
   <div class="flex min-w-0 flex-1 flex-col">
     <header
       class={cn(
-        "fixed top-0 end-0 z-30 flex h-14 items-center border-b transition-[background-color,border-color,backdrop-filter,inset-inline-start] duration-200",
-        "start-0",
-        sidebarCollapsed ? "md:start-16" : "md:start-64",
+        "fixed top-0 inset-e-0 z-30 flex h-14 items-center border-b transition-[background-color,border-color,backdrop-filter,inset-inline-start] duration-200",
+        "inset-s-0",
+        sidebarCollapsed ? "md:inset-s-16" : "md:inset-s-64",
         headerScrolled
           ? "border-border/40 bg-background/55 backdrop-blur-xl"
           : "border-border bg-background/95 backdrop-blur-md"
@@ -212,6 +225,12 @@
               <Loader class={cn(ICON_SM, "animate-spin")} aria-hidden="true" />
             {/if}
           </div>
+        {:else if router.view === "skills"}
+          <span class={META_CHIP}>
+            {i18n.t("text-total", {
+              count: skills.isSearching ? skills.filteredSkills.length : skills.skills.length,
+            })}
+          </span>
         {/if}
       </div>
     </header>
@@ -334,6 +353,39 @@
           onTagsChange={explorer.updateMemoryTags}
           knownTags={explorer.knownTags}
         />
+      {:else if router.view === "skills"}
+        <div class={PAGE_TOOLBAR}>
+          <div class={cn("flex w-full min-w-0 items-center", GAP)}>
+            <div class="flex min-w-0 flex-1 justify-center px-1">
+              <SearchInput
+                id="skills-search-input"
+                class="w-full max-w-xl"
+                placeholder={i18n.t("placeholder-search-skills")}
+                bind:value={skills.searchInput}
+                showClear={skills.isSearching}
+                onClear={skills.clearSearch}
+              />
+            </div>
+            <div class={cn("flex shrink-0 items-center", GAP)}>
+              <Button
+                variant="default"
+                size="icon"
+                aria-label={i18n.t("btn-add-skill")}
+                title={i18n.t("btn-add-skill")}
+                onclick={skills.openCreate}
+              >
+                <Plus class={ICON} aria-hidden="true" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        <SkillsView
+          skills={skills.skills}
+          filtered={skills.filteredSkills}
+          loading={skills.loading}
+          onEdit={skills.openEdit}
+          onDelete={skills.deleteSkill}
+        />
       {:else}
         <ProfileView
           profile={profile.userProfile}
@@ -345,6 +397,14 @@
     </div>
   </div>
 </div>
+
+<SkillDialog
+  bind:open={skills.dialogOpen}
+  editing={skills.editingId !== null}
+  bind:draft={skills.draft}
+  onOpenChange={(open) => (skills.dialogOpen = open)}
+  onSave={skills.saveSkill}
+/>
 
 <AddMemoryDialog
   open={explorer.addOpen}

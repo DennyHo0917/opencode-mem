@@ -3,6 +3,7 @@
   import Folder from "@lucide/svelte/icons/folder";
   import Languages from "@lucide/svelte/icons/languages";
   import Moon from "@lucide/svelte/icons/moon";
+  import ScrollText from "@lucide/svelte/icons/scroll-text";
   import Sun from "@lucide/svelte/icons/sun";
   import User from "@lucide/svelte/icons/user";
   import X from "@lucide/svelte/icons/x";
@@ -30,6 +31,7 @@
     brand: string;
     projectLabel: string;
     profileLabel: string;
+    skillsLabel: string;
     langLabel: string;
     languageLabel: string;
     themeLabel: string;
@@ -45,6 +47,7 @@
     brand,
     projectLabel,
     profileLabel,
+    skillsLabel,
     langLabel,
     languageLabel,
     themeLabel,
@@ -93,7 +96,7 @@
 
 <aside
   class={cn(
-    "inset-y-0 start-0 z-50 flex h-svh shrink-0 flex-col overflow-hidden border-e border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 motion-reduce:transition-none",
+    "inset-y-0 inset-s-0 z-50 flex h-svh shrink-0 flex-col overflow-hidden border-e border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 motion-reduce:transition-none",
     "fixed top-0 translate-x-0!",
     collapsed ? "md:w-16" : "md:w-64",
     "w-64",
@@ -161,6 +164,19 @@
       <User class={cn(ICON, "shrink-0")} aria-hidden="true" />
       {#if !iconOnly}
         <span class="truncate text-start">{profileLabel}</span>
+      {/if}
+    </a>
+    <a
+      href={ROUTES.skills}
+      class={navClass(currentView === "skills")}
+      aria-current={currentView === "skills" ? "page" : undefined}
+      title={skillsLabel}
+      aria-label={skillsLabel}
+      onclick={(e) => onNavClick(e, ROUTES.skills)}
+    >
+      <ScrollText class={cn(ICON, "shrink-0")} aria-hidden="true" />
+      {#if !iconOnly}
+        <span class="truncate text-start">{skillsLabel}</span>
       {/if}
     </a>
   </nav>
