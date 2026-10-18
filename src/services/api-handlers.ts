@@ -13,6 +13,12 @@ import type { UserProfileData } from "./user-profile/types.js";
 import { sortProfileItems } from "../utils/profile.js";
 import { toPublicProfileData } from "./user-profile/profile-utils.js";
 import type { ShardInfo } from "./turso/types.js";
+import {
+  collectDailyStats,
+  collectProfileStats,
+  collectShardStats,
+  type CollectDailyStatsOptions,
+} from "./stats-service.js";
 
 async function getAllMemoryShards(): Promise<ShardInfo[]> {
   await ensureTursoReady();
@@ -793,37 +799,45 @@ export async function handleSearch(
   }
 }
 
-export async function handleStats(): Promise<
+export async function handleStats(
+  options: Pick<CollectDailyStatsOptions, "logDir" | "now"> = {}
+): Promise<
   ApiResponse<{
     total: number;
     byScope: { user: number; project: number };
     byType: Record<string, number>;
+    generatedAt: string;
+    shards: Awaited<ReturnType<typeof collectShardStats>>["shards"];
+    shardsError?: string;
+    profile: Awaited<ReturnType<typeof collectProfileStats>>;
+    daily: ReturnType<typeof collectDailyStats>;
   }>
 > {
   try {
     // Stats only counts Turso/libSQL rows; no embedding needed.
     // See handleListTags comment - keep embedding init out of read paths.
-    const shards = await getAllMemoryShards();
-    let userCount = 0,
-      projectCount = 0;
-    const typeCount: Record<string, number> = {};
-    for (const shard of shards) {
-      const db = await tursoConnectionManager.getConnection(shard.dbPath);
-      const memories = await tursoVectorSearch.getAllMemories(db);
-      for (const r of memories) {
-        const containerTag = String(r.container_tag ?? "");
-        const type = r.type ? String(r.type) : "";
-        if (containerTag.includes("_user_")) userCount++;
-        else if (containerTag.includes("_project_")) projectCount++;
-        if (type) typeCount[type] = (typeCount[type] || 0) + 1;
-      }
+    let memoryShards: ShardInfo[] = [];
+    let shardsError: string | undefined;
+    try {
+      memoryShards = await getAllMemoryShards();
+    } catch (error) {
+      shardsError = error instanceof Error ? error.message : String(error);
     }
+    const [shardStats, profile] = await Promise.all([
+      collectShardStats(memoryShards),
+      collectProfileStats(),
+    ]);
     return {
       success: true,
       data: {
-        total: userCount + projectCount,
-        byScope: { user: userCount, project: projectCount },
-        byType: typeCount,
+        total: shardStats.total,
+        byScope: shardStats.byScope,
+        byType: shardStats.byType,
+        generatedAt: new Date().toISOString(),
+        shards: shardStats.shards,
+        ...(shardsError ? { shardsError } : {}),
+        profile,
+        daily: collectDailyStats(options),
       },
     };
   } catch (error) {
