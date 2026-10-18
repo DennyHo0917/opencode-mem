@@ -1,9 +1,9 @@
 {
   "success": true,
   "data": {
-    "total": 1512,
-    "byScope": { "user": 384, "project": 1128 },
-    "byType": { "context": 931, "fact": 205, "preference": 376 },
+    "total": 14,
+    "byScope": { "user": 5, "project": 9 },
+    "byType": { "context": 8, "fact": 3, "preference": 3 },
     "generatedAt": "2026-10-18T09:41:12.000Z",
     "shards": [
       {
@@ -14,11 +14,11 @@
         "fileName": "project_b1c2d3e4f5a6b7c8_shard_0.db",
         "fileExists": true,
         "isActive": true,
-        "registeredVectorCount": 964,
-        "memoryCount": 961,
+        "registeredVectorCount": 8,
+        "memoryCount": 7,
         "oldestCreatedAt": "2026-05-02T08:15:00.000Z",
         "newestCreatedAt": "2026-10-18T07:02:44.000Z",
-        "duplicateTagCount": 34
+        "duplicateTagCount": 2
       },
       {
         "shardId": 42,
@@ -28,11 +28,11 @@
         "fileName": "project_b1c2d3e4f5a6b7c8_shard_1.db",
         "fileExists": true,
         "isActive": false,
-        "registeredVectorCount": 167,
-        "memoryCount": 167,
+        "registeredVectorCount": 2,
+        "memoryCount": 2,
         "oldestCreatedAt": "2026-06-11T19:30:00.000Z",
         "newestCreatedAt": "2026-08-29T14:11:09.000Z",
-        "duplicateTagCount": 6
+        "duplicateTagCount": 0
       },
       {
         "shardId": 7,
@@ -42,11 +42,11 @@
         "fileName": "user_a9f8e7d6c5b4a3f2_shard_0.db",
         "fileExists": true,
         "isActive": true,
-        "registeredVectorCount": 384,
-        "memoryCount": 384,
+        "registeredVectorCount": 5,
+        "memoryCount": 5,
         "oldestCreatedAt": "2026-04-18T11:00:00.000Z",
         "newestCreatedAt": "2026-10-18T05:47:21.000Z",
-        "duplicateTagCount": 11
+        "duplicateTagCount": 1
       },
       {
         "shardId": 55,
@@ -56,12 +56,12 @@
         "fileName": "project_0d1e2f3a4b5c6d7e_shard_0.db",
         "fileExists": false,
         "isActive": true,
-        "registeredVectorCount": 23,
+        "registeredVectorCount": 3,
         "memoryCount": 0,
         "oldestCreatedAt": null,
         "newestCreatedAt": null,
         "duplicateTagCount": 0,
-        "error": "Shard DB file missing: ~/.opencode-mem/data/projects/project_0d1e2f3a4b5c6d7e_shard_0.db"
+        "error": "Shard DB file missing: project_0d1e2f3a4b5c6d7e_shard_0.db"
       }
     ],
     "profile": {

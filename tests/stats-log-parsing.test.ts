@@ -31,6 +31,19 @@ describe("stats log parsing", () => {
         `[2026-10-16T19:18:46.118+11:00] listMemories: error: {"error":"failed to open database ... short read on WAL frame"}`,
         "listMemories",
       ],
+      [
+        `[2026-10-16T19:20:00.000+11:00] Auto-capture final error after 3 attempts: {"error":"timeout"}`,
+        "Auto-capture final error",
+      ],
+      [
+        `[2026-10-16T19:21:00.000+11:00] Compaction handler error: {"error":"boom"}`,
+        "Compaction handler error",
+      ],
+      [
+        `[2026-10-16T19:22:00.000+11:00] Idle processing error: {"error":"boom"}`,
+        "Idle processing error",
+      ],
+      [`[2026-10-16T19:23:00.000+11:00] chat.message: ERROR: {"error":"boom"}`, "chat.message"],
     ] as const;
 
     for (const [line, errorBucket] of fixtures) {

@@ -32,7 +32,6 @@ export type StatsData = {
   generatedAt: string;
   // Older or partially available responses can omit diagnostic sections.
   shards?: StatsShard[];
-  shardsError?: string;
   profile?: {
     exists: boolean;
     version?: number;
@@ -42,6 +41,7 @@ export type StatsData = {
     error?: string;
   };
   daily?: StatsDaily[];
+  dailyError?: string;
 };
 
 export function createStatsStore() {

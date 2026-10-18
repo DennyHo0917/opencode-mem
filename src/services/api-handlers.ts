@@ -800,7 +800,7 @@ export async function handleSearch(
 }
 
 export async function handleStats(
-  options: Pick<CollectDailyStatsOptions, "logDir" | "now"> = {}
+  options: Pick<CollectDailyStatsOptions, "logDir" | "now"> & { probe?: boolean } = {}
 ): Promise<
   ApiResponse<{
     total: number;
@@ -808,25 +808,36 @@ export async function handleStats(
     byType: Record<string, number>;
     generatedAt: string;
     shards: Awaited<ReturnType<typeof collectShardStats>>["shards"];
-    shardsError?: string;
     profile: Awaited<ReturnType<typeof collectProfileStats>>;
     daily: ReturnType<typeof collectDailyStats>;
+    dailyError?: string;
   }>
 > {
   try {
+    // Ownership/liveness probes must stay cheap: auth already ran, do not open
+    // shards or scan logs under the 2s checkServerAvailable timeout.
+    if (options.probe) {
+      return { success: true };
+    }
+
     // Stats only counts Turso/libSQL rows; no embedding needed.
     // See handleListTags comment - keep embedding init out of read paths.
-    let memoryShards: ShardInfo[] = [];
-    let shardsError: string | undefined;
-    try {
-      memoryShards = await getAllMemoryShards();
-    } catch (error) {
-      shardsError = error instanceof Error ? error.message : String(error);
-    }
+    // Shard listing failures stay hard errors so /api/stats consumers (explorer
+    // header total) never treat an empty total as a successful empty store.
+    const memoryShards = await getAllMemoryShards();
     const [shardStats, profile] = await Promise.all([
       collectShardStats(memoryShards),
       collectProfileStats(),
     ]);
+
+    let daily: ReturnType<typeof collectDailyStats> = [];
+    let dailyError: string | undefined;
+    try {
+      daily = collectDailyStats(options);
+    } catch (error) {
+      dailyError = error instanceof Error ? error.message : String(error);
+    }
+
     return {
       success: true,
       data: {
@@ -835,9 +846,9 @@ export async function handleStats(
         byType: shardStats.byType,
         generatedAt: new Date().toISOString(),
         shards: shardStats.shards,
-        ...(shardsError ? { shardsError } : {}),
         profile,
-        daily: collectDailyStats(options),
+        daily,
+        ...(dailyError ? { dailyError } : {}),
       },
     };
   } catch (error) {

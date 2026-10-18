@@ -94,14 +94,26 @@ export function classifyLogMessage(message: string): LogClassification {
     return { counter: "compactionInjections" };
   }
 
-  if (message.endsWith(": error")) {
-    return { errorBucket: message.slice(0, -": error".length) };
-  }
   if (message.startsWith("Turso ready gate failed")) {
     return { errorBucket: "Turso ready gate failed" };
   }
   if (message.startsWith("Failed to load skills for OpenCode registration")) {
     return { errorBucket: "Failed to load skills for OpenCode registration" };
+  }
+  if (message.startsWith("Auto-capture final error")) {
+    return { errorBucket: "Auto-capture final error" };
+  }
+  if (message.startsWith("Compaction handler error")) {
+    return { errorBucket: "Compaction handler error" };
+  }
+  if (message.startsWith("Idle processing error")) {
+    return { errorBucket: "Idle processing error" };
+  }
+
+  // Match `listMemories: error`, `chat.message: ERROR`, etc.
+  const errorSuffix = message.match(/^(.*):\s*error$/i);
+  if (errorSuffix) {
+    return { errorBucket: errorSuffix[1]!.trim() };
   }
   return {};
 }
@@ -258,7 +270,7 @@ export async function collectShardStats(shards: ShardInfo[]): Promise<ShardColle
     };
 
     if (!stats.fileExists) {
-      stats.error = `Shard DB file missing: ${shard.dbPath}`;
+      stats.error = `Shard DB file missing: ${stats.fileName}`;
       shardStats.push(stats);
       continue;
     }
@@ -268,6 +280,12 @@ export async function collectShardStats(shards: ShardInfo[]): Promise<ShardColle
 
       // Aggregate instead of `SELECT *` (getAllMemories): stats is polled every
       // 30s by the web UI and must not drag vector blobs for every memory.
+      // Accumulators stay local until every query for this shard succeeds so a
+      // mid-walk failure cannot inflate global totals while memoryCount stays 0.
+      let shardUserCount = 0;
+      let shardProjectCount = 0;
+      const shardTypeCount: Record<string, number> = {};
+
       const scopeTypeCounts = await db.all<{
         container_tag: unknown;
         type: unknown;
@@ -277,9 +295,9 @@ export async function collectShardStats(shards: ShardInfo[]): Promise<ShardColle
         const containerTag = String(row.container_tag ?? "");
         const type = row.type ? String(row.type) : "";
         const count = Number(row.c ?? 0);
-        if (containerTag.includes("_user_")) userCount += count;
-        else if (containerTag.includes("_project_")) projectCount += count;
-        if (type) typeCount[type] = (typeCount[type] || 0) + count;
+        if (containerTag.includes("_user_")) shardUserCount += count;
+        else if (containerTag.includes("_project_")) shardProjectCount += count;
+        if (type) shardTypeCount[type] = (shardTypeCount[type] || 0) + count;
       }
 
       const aggregate = await db.get<{ c: number | bigint; mn: unknown; mx: unknown }>(
@@ -296,7 +314,17 @@ export async function collectShardStats(shards: ShardInfo[]): Promise<ShardColle
         (total, row) => total + Math.max(0, Number(row.c) - 1),
         0
       );
+
+      userCount += shardUserCount;
+      projectCount += shardProjectCount;
+      for (const [type, count] of Object.entries(shardTypeCount)) {
+        typeCount[type] = (typeCount[type] || 0) + count;
+      }
     } catch (error) {
+      stats.memoryCount = 0;
+      stats.oldestCreatedAt = null;
+      stats.newestCreatedAt = null;
+      stats.duplicateTagCount = 0;
       stats.error = error instanceof Error ? error.message : String(error);
     }
 

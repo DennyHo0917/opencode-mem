@@ -141,9 +141,63 @@ describe("handleStats health data", () => {
     });
     expect(daily?.find((item) => item.date === day(3))?.compactionInjections).toBe(1);
     expect(daily?.find((item) => item.date === day(4))?.profileInjections).toBe(1);
-    expect(result.data?.shardsError).toBeUndefined();
+    expect(result.data?.dailyError).toBeUndefined();
     // Windows CI needs >5s for two shard creations, three vector inserts, and
     // the full stats walk; the default 5s per-test timeout races afterEach
     // cleanup against the in-flight walk. Same budget as plugin-bundle-boundary.
   }, 30_000);
+
+  it("probe mode returns success without opening shards or scanning logs", async () => {
+    const { handleStats } = await import("../src/services/api-handlers.js");
+    const result = await handleStats({ probe: true });
+    expect(result).toEqual({ success: true });
+    expect(result.data).toBeUndefined();
+  });
+
+  it("excludes a shard from totals when a later query fails mid-walk", async () => {
+    const shardDir = mkdtempSync(join(tmpdir(), "turso-stats-partial-"));
+    const dbPath = join(shardDir, "user_aaaaaaaaaaaaaaaa_shard_0.db");
+    writeFileSync(dbPath, "");
+
+    const { collectShardStats } = await import("../src/services/stats-service.js");
+    const { tursoConnectionManager } = await import("../src/services/turso/connection-manager.js");
+    const original = tursoConnectionManager.getConnection.bind(tursoConnectionManager);
+
+    tursoConnectionManager.getConnection = (async () => ({
+      all: async (sql: string) => {
+        if (sql.includes("GROUP BY container_tag")) {
+          return [{ container_tag: "opencode_user_aaaaaaaaaaaaaaaa", type: "context", c: 4 }];
+        }
+        throw new Error("duplicate query failed");
+      },
+      get: async () => ({ c: 4, mn: Date.UTC(2026, 9, 1), mx: Date.UTC(2026, 9, 10) }),
+    })) as typeof tursoConnectionManager.getConnection;
+
+    try {
+      const result = await collectShardStats([
+        {
+          id: 1,
+          scope: "user",
+          scopeHash: "aaaaaaaaaaaaaaaa",
+          shardIndex: 0,
+          dbPath,
+          vectorCount: 4,
+          isActive: true,
+        } as never,
+      ]);
+
+      expect(result.total).toBe(0);
+      expect(result.byScope).toEqual({ user: 0, project: 0 });
+      expect(result.byType).toEqual({});
+      expect(result.shards).toHaveLength(1);
+      expect(result.shards[0]).toMatchObject({
+        memoryCount: 0,
+        duplicateTagCount: 0,
+        error: "duplicate query failed",
+      });
+    } finally {
+      tursoConnectionManager.getConnection = original;
+      rmSync(shardDir, { recursive: true, force: true });
+    }
+  });
 });

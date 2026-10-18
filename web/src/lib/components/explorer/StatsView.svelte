@@ -102,12 +102,12 @@
       <div class={cn(SURFACE_CARD, CARD_PAD, STACK)}>
         <h2 class="text-sm text-muted-foreground">{i18n.t("stats-active-shards")}</h2>
         <p class="text-3xl font-semibold tabular-nums text-foreground-bright">
-          {data.shards && !data.shardsError ? shards.filter((shard) => shard.isActive).length : "—"}
+          {data.shards ? shards.filter((shard) => shard.isActive).length : "—"}
         </p>
         <p class="text-xs text-muted-foreground">
-          {data.shardsError || !data.shards
-            ? i18n.t("stats-unavailable")
-            : i18n.t("text-total", { count: shards.length })}
+          {data.shards
+            ? i18n.t("text-total", { count: shards.length })
+            : i18n.t("stats-unavailable")}
         </p>
       </div>
       <div class={cn(SURFACE_CARD, CARD_PAD, STACK)}>
@@ -157,7 +157,12 @@
       <h2 id="stats-daily-heading" class="text-lg font-semibold text-foreground-bright">
         {i18n.t("stats-daily")}
       </h2>
-      {#if !data.daily}
+      {#if data.dailyError}
+        <Alert variant="destructive">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription class="break-words">{data.dailyError}</AlertDescription>
+        </Alert>
+      {:else if !data.daily}
         <EmptyState>{i18n.t("stats-unavailable")}</EmptyState>
       {:else if daily.length === 0}
         <EmptyState>{i18n.t("stats-no-activity")}</EmptyState>
@@ -228,12 +233,6 @@
       <h2 id="stats-shards-heading" class="text-lg font-semibold text-foreground-bright">
         {i18n.t("stats-shards")}
       </h2>
-      {#if data.shardsError}
-        <Alert variant="destructive">
-          <TriangleAlert aria-hidden="true" />
-          <AlertDescription class="break-words">{data.shardsError}</AlertDescription>
-        </Alert>
-      {/if}
       {#if shards.length}
         <div class={cn(SURFACE_CARD, "overflow-x-auto focus-ring")}>
           <table class="w-full text-sm tabular-nums">
@@ -301,7 +300,7 @@
             </tbody>
           </table>
         </div>
-      {:else if !data.shardsError}
+      {:else}
         <EmptyState>{i18n.t(data.shards ? "stats-no-shards" : "stats-unavailable")}</EmptyState>
       {/if}
     </section>
