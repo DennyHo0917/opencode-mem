@@ -142,5 +142,8 @@ describe("handleStats health data", () => {
     expect(daily?.find((item) => item.date === day(3))?.compactionInjections).toBe(1);
     expect(daily?.find((item) => item.date === day(4))?.profileInjections).toBe(1);
     expect(result.data?.shardsError).toBeUndefined();
-  });
+    // Windows CI needs >5s for two shard creations, three vector inserts, and
+    // the full stats walk; the default 5s per-test timeout races afterEach
+    // cleanup against the in-flight walk. Same budget as plugin-bundle-boundary.
+  }, 30_000);
 });
