@@ -488,6 +488,12 @@ memory({ mode: "import", inputPath: "./memories.json" });
   "memoryApiKey": "env://CHEAPER_INFERENCE_API_KEY",
   ```
   عند اختيار هذا المزود، تُرسل مطالبات الالتقاط التلقائي / الملف، واستجابات النموذج، وسياق المحادثة ذي الصلة إلى `https://api.cheaperinference.com`.
+- `api-route`: إعداد مسبق لـ OpenAI-compatible Chat Completions لـ [API Route](https://www.api-route.com/en/docs/quickstart). `memoryApiUrl` و`memoryModel` اختياريان — الافتراضي `https://global.api-route.com/v1` و`gpt-6.1-sol`. إذا حُذف `memoryApiKey`، يُستخدم `API_ROUTE_API_KEY` من البيئة. مثال:
+  ```jsonc
+  "memoryProvider": "api-route",
+  "memoryApiKey": "env://API_ROUTE_API_KEY",
+  ```
+  عند اختيار هذا المزود، تُرسل مطالبات الالتقاط التلقائي / الملف، واستجابات النموذج، وسياق المحادثة ذي الصلة إلى `https://global.api-route.com`.
 
 استكشاف الأخطاء:
 

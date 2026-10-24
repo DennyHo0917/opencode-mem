@@ -485,6 +485,12 @@ memory({ mode: "import", inputPath: "./memories.json" });
   "memoryApiKey": "env://CHEAPER_INFERENCE_API_KEY",
   ```
   选择此提供商时，自动捕获 / 画像提示、模型响应与相关对话上下文会传输到 `https://api.cheaperinference.com`。
+- `api-route`：面向 [API Route](https://www.api-route.com/en/docs/quickstart) 的 OpenAI 兼容 Chat Completions 预设。`memoryApiUrl` 与 `memoryModel` 可选 — 它们默认为 `https://global.api-route.com/v1` 与 `gpt-6.1-sol`。若省略 `memoryApiKey`，则使用环境中的 `API_ROUTE_API_KEY`。示例：
+  ```jsonc
+  "memoryProvider": "api-route",
+  "memoryApiKey": "env://API_ROUTE_API_KEY",
+  ```
+  选择此提供商时，自动捕获 / 画像提示、模型响应与相关对话上下文会传输到 `https://global.api-route.com`。
 
 故障排除：
 

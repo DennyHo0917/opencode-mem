@@ -490,6 +490,12 @@ Manuel `memoryProvider` modları:
   "memoryApiKey": "env://CHEAPER_INFERENCE_API_KEY",
   ```
   Bu sağlayıcı seçildiğinde otomatik yakalama / profil prompt’ları, model yanıtları ve ilgili konuşma bağlamı `https://api.cheaperinference.com` adresine iletilir.
+- `api-route`: [API Route](https://www.api-route.com/en/docs/quickstart) için OpenAI uyumlu Chat Completions ön ayarı. `memoryApiUrl` ve `memoryModel` isteğe bağlıdır — varsayılanları `https://global.api-route.com/v1` ve `gpt-6.1-sol`’dir. `memoryApiKey` atlanırsa ortamdan `API_ROUTE_API_KEY` kullanılır. Örnek:
+  ```jsonc
+  "memoryProvider": "api-route",
+  "memoryApiKey": "env://API_ROUTE_API_KEY",
+  ```
+  Bu sağlayıcı seçildiğinde otomatik yakalama / profil prompt’ları, model yanıtları ve ilgili konuşma bağlamı `https://global.api-route.com` adresine iletilir.
 
 Sorun giderme:
 

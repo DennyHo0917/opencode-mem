@@ -488,6 +488,12 @@ Manuelle `memoryProvider`-Modi:
   "memoryApiKey": "env://CHEAPER_INFERENCE_API_KEY",
   ```
   Wenn dieser Provider gewählt ist, werden Auto-Capture- / Profil-Prompts, Modellantworten und relevanter Gesprächskontext an `https://api.cheaperinference.com` übertragen.
+- `api-route`: OpenAI-kompatibles Chat-Completions-Preset für [API Route](https://www.api-route.com/en/docs/quickstart). `memoryApiUrl` und `memoryModel` sind optional — sie defaulten auf `https://global.api-route.com/v1` und `gpt-6.1-sol`. Fehlt `memoryApiKey`, wird `API_ROUTE_API_KEY` aus der Umgebung verwendet. Beispiel:
+  ```jsonc
+  "memoryProvider": "api-route",
+  "memoryApiKey": "env://API_ROUTE_API_KEY",
+  ```
+  Wenn dieser Provider gewählt ist, werden Auto-Capture- / Profil-Prompts, Modellantworten und relevanter Gesprächskontext an `https://global.api-route.com` übertragen.
 
 Fehlerbehebung:
 
