@@ -193,7 +193,7 @@ describe("APIRouteProvider", () => {
 });
 
 describe("AIProviderFactory api-route wiring", () => {
-  it("creates a API Route provider and lists it as supported", () => {
+  it("creates an API Route provider and lists it as supported", () => {
     const provider = AIProviderFactory.createProvider("api-route", {
       model: "",
       apiUrl: "",

@@ -441,6 +441,7 @@ describe("project-scoped config resolution", () => {
       /Project config cannot set remote provider fields: memoryProvider/
     );
   });
+
   it("resolves API Route API key from API_ROUTE_API_KEY and marks manual ready", () => {
     const originalApiKey = process.env.API_ROUTE_API_KEY;
     process.env.API_ROUTE_API_KEY = "route-test-key";
